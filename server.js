@@ -1,7 +1,9 @@
 // server.js
 import express from 'express';
 import axios from 'axios';
+import https from 'https';
 import { create } from 'xmlbuilder2';
+import cheerio from 'cheerio';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,15 +16,35 @@ app.get('/', (req, res) => {
 // Menü endpoint
 app.get('/menu', async (req, res) => {
   try {
-    // Hacı Bayram yemek sitesinden veri çek
-    const response = await axios.get('https://yemek.hacibayram.edu.tr/');
+    // SSL doğrulamasını kapatmak için httpsAgent oluştur
+    const agent = new https.Agent({ rejectUnauthorized: false });
 
-    // Mevcut parsing fonksiyonunu kullan
-    // (mevcut server.js kodundan alındığı gibi)
-    const menuXml = parseMenuFromHTML(response.data);
+    // Menü sitesinden veri çek
+    const response = await axios.get('https://yemek.hacibayram.edu.tr/', { httpsAgent: agent });
 
+    // HTML verisini parse et
+    const $ = cheerio.load(response.data);
+
+    // Günlük menüyü çek
+    const gun = $('h2').first().text().trim();
+    const yemekler = [];
+    $('table tbody tr').each((i, row) => {
+      const yemek = $(row).find('td').eq(1).text().trim();
+      if (yemek) yemekler.push(yemek);
+    });
+
+    // XML formatında menüyü oluştur
+    const doc = create({ version: '1.0' })
+      .ele('menu')
+        .ele('gun').txt(gun).up()
+        .ele('yemekler')
+          .ele('yemek').txt(yemekler.join(', ')).up()
+        .up()
+      .up();
+
+    // XML olarak gönder
     res.setHeader('Content-Type', 'application/xml');
-    res.send(menuXml);
+    res.send(doc.end({ prettyPrint: true }));
 
   } catch (err) {
     res.status(500).send('Hata: ' + err.message);
@@ -32,16 +54,3 @@ app.get('/menu', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server çalışıyor: http://localhost:${PORT}`);
 });
-
-// --- Mevcut server.js’den parsing fonksiyonunu buraya al ---
-// Örnek:
-function parseMenuFromHTML(html) {
-  // Buraya senin mevcut HTML parsing ve xmlbuilder2 kodun gelecek
-  // Örneğin günleri ve yemekleri çekip XML oluşturuyor olmalı
-  const doc = create({ version: '1.0' })
-    .ele('menu')
-      .ele('gun').txt('Pazartesi').up()
-      .ele('yemek').txt('Mercimek Çorbası').up()
-    .up();
-  return doc.end({ prettyPrint: true });
-}
