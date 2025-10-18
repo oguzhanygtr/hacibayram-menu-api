@@ -1,8 +1,3 @@
-// ===============================
-// Hacı Bayram Yemek Menüsü XML Proxy
-// Endpoint: /menu  (XML döndürür)
-// ===============================
-
 // Modüller
 import express from "express";
 import axios from "axios";
