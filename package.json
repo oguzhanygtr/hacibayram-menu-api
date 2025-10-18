@@ -2,11 +2,6 @@
   "name": "hacibayram-menu-api",
   "version": "1.0.0",
   "type": "module",
-<<<<<<< HEAD
-=======
-  "description": "",
-  "main": "index.js",
->>>>>>> 23dfff7356b8ecd2091e2a43b501b83de663e4e8
   "scripts": {
     "start": "node server.js"
   },
