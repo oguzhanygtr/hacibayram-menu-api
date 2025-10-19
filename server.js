@@ -6,6 +6,7 @@ import { load } from 'cheerio';  // <- değiştirildi
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 
 // ... / ve /menu endpoint'leri aynı
 
@@ -38,4 +39,5 @@ app.get('/menu', async (req, res) => {
   } catch (err) {
     res.status(500).send('Hata: ' + err.message);
   }
+
 });
