@@ -1,25 +1,13 @@
 {
-<<<<<<< HEAD
   "name": "hacibayram-menu-api",
-  "version": "1.0.0",
-  "description": "Node.js proxy for Hacı Bayram Veli University yemek listesi (XML endpoint)",
-  "main": "server.js",
-=======
->>>>>>> 252e2b5 (Update: Puppeteer tabanlı gerçek menü çekici eklendi)
+  "version": "1.5.0",
   "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "axios": "^1.6.7",
-    "cheerio": "^1.0.0-rc.12",
     "express": "^4.18.2",
-    "xmlbuilder2": "^3.1.1"
-=======
-    "express": "^5.1.0",
-    "puppeteer": "^24.25.0",
-    "xmlbuilder2": "^4.0.0"
->>>>>>> 252e2b5 (Update: Puppeteer tabanlı gerçek menü çekici eklendi)
+    "puppeteer": "^23.1.0",
+    "xmlbuilder2": "^3.0.2"
   }
 }
