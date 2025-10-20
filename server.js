@@ -21,6 +21,7 @@ app.get("/menu", async (req, res) => {
   try {
     // Menü sayfasını çek
     const response = await axios.get(MENU_URL, { httpsAgent: agent });
+    console.log(response.data);
     const $ = cheerio.load(response.data);
 
     // Gün bilgisini bul
@@ -59,3 +60,4 @@ app.get("/menu", async (req, res) => {
 app.listen(PORT, () =>
   console.log(`✅ Server running on port ${PORT}`)
 );
+
