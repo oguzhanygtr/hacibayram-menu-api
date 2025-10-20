@@ -1,7 +1,8 @@
 {
   "name": "hacibayram-menu-api",
   "version": "1.0.0",
-  "description": "Hacı Bayram yemek menüsü XML proxy API",
+  "description": "Hacıbey Yemek Menüsü XML API",
+  "main": "server.js",
   "type": "module",
   "scripts": {
     "start": "node server.js"
