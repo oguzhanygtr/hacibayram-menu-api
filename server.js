@@ -1,43 +1,56 @@
-import express from 'express';
-import axios from 'axios';
-import https from 'https';
-import { create } from 'xmlbuilder2';
-import { load } from 'cheerio';  // <- değiştirildi
+import express from "express";
+import axios from "axios";
+import * as cheerio from "cheerio";
+import { create } from "xmlbuilder2";
+import https from "https";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+const MENU_URL = "https://yemek.hacibayram.edu.tr/";
 
-// ... / ve /menu endpoint'leri aynı
+const agent = new https.Agent({ rejectUnauthorized: false }); // SSL doğrulamasını kapat
 
-app.get('/menu', async (req, res) => {
+app.get("/", (req, res) => {
+  res.send("<h2>Hacı Bayram Menü Proxy Çalışıyor ✅<br/>/menu endpoint'ini deneyin.</h2>");
+});
+
+app.get("/menu", async (req, res) => {
   try {
-    const agent = new https.Agent({ rejectUnauthorized: false });
-    const response = await axios.get('https://yemek.hacibayram.edu.tr/', { httpsAgent: agent });
+    const response = await axios.get(MENU_URL, { httpsAgent: agent });
+    const $ = cheerio.load(response.data);
 
-    const $ = load(response.data);  // <- değiştirildi
+    // Menü listesini yakala (örnek: <div class="menu"><ul><li>...</li></ul></div>)
+    const gun = $("h2, .menuHeader, .menuTitle").first().text().trim() || "Günün Menüsü";
 
-    // HTML parsing
-    const gun = $('h2').first().text().trim();
     const yemekler = [];
-    $('table tbody tr').each((i, row) => {
-      const yemek = $(row).find('td').eq(1).text().trim();
-      if (yemek) yemekler.push(yemek);
+    $("ul li, .menu ul li").each((i, el) => {
+      const text = $(el).text().trim();
+      if (text.length > 0) yemekler.push(text);
     });
 
-    const doc = create({ version: '1.0' })
-      .ele('menu')
-        .ele('gun').txt(gun).up()
-        .ele('yemekler')
-          .ele('yemek').txt(yemekler.join(', ')).up()
-        .up()
-      .up();
+    // Eğer liste boşsa fallback döndür
+    if (yemekler.length === 0) {
+      yemekler.push("Menü şu anda görüntülenemiyor.");
+    }
 
-    res.setHeader('Content-Type', 'application/xml');
-    res.send(doc.end({ prettyPrint: true }));
+    // XML oluştur
+    const xml = create({ version: "1.0" })
+      .ele("menu")
+      .ele("gun").txt(gun).up()
+      .ele("yemekler");
 
-  } catch (err) {
-    res.status(500).send('Hata: ' + err.message);
+    yemekler.forEach((y) => xml.ele("yemek").txt(y).up());
+    const xmlOutput = xml.end({ prettyPrint: true });
+
+    res.type("application/xml");
+    res.send(xmlOutput);
+
+  } catch (error) {
+    console.error("Hata:", error.message);
+    res.status(500).send("<error>Menü alınamadı</error>");
   }
-
 });
+
+app.listen(PORT, () =>
+  console.log(`✅ Server running on port ${PORT}`)
+);
