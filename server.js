@@ -2,46 +2,51 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const { create } = require('xmlbuilder2');
+const https = require('https'); // <-- BU SATIRI EKLEYİN
 
 const app = express();
-const PORT = process.env.PORT || 3000; // OnRender portu otomatik atar
-
+const PORT = process.env.PORT || 3000;
 const YEMEK_URL = 'https://yemek.hacibayram.edu.tr/';
+
+// SSL/TLS doğrulamasını atlamak için bir "agent" oluşturun
+const agent = new https.Agent({  
+  rejectUnauthorized: false
+});
 
 app.get('/menu.xml', async (req, res) => {
   try {
     // 1. Üniversitenin sitesinden HTML'i çek
-    const { data } = await axios.get(YEMEK_URL);
+    // İsteğe oluşturduğumuz agent'ı "httpsAgent" olarak ekleyin
+    const { data } = await axios.get(YEMEK_URL, { httpsAgent: agent });
 
     // 2. HTML'i Cheerio ile yükle
     const $ = cheerio.load(data);
 
     // 3. İlgili 'ul' ve 'li' etiketlerini bul
-    // !!! UYARI: Bu seçiciler sitenin tasarımına bağlıdır ve değişebilir.
-    // Sizin ifadenize göre (ul li) ilk bulduğu listeyi alacak şekilde ayarlandı.
-    // Güncel site yapısında bu seçici 'p' etiketleri veya '.card-body p' gibi farklı olabilir.
-    
+    // (Önceki cevaptaki seçici uyarıları hala geçerlidir)
     const menuItems = [];
     
-    // Örnek olarak sitedeki ".card-body" içindeki ilk "ul" etiketini arayalım
-    // Eğer doğrudan 'ul li' istiyorsanız: $('ul').first().find('li').each(...) kullanın
-    // Güncel site yapısına göre (Ekim 2025 itibariyle) '.card-body p' daha doğru görünüyor.
-    // Biz sizin talebinizdeki 'ul li' varsayımına sadık kalalım:
-    const $menuList = $('ul').first(); // Sitedeki ilk 'ul' etiketini bul
-    
-    if ($menuList.length === 0) {
-        throw new Error('Menü listesi (ul) bulunamadı. Sitenin HTML yapısı değişmiş olabilir.');
-    }
+    // Sitenin güncel yapısına göre (p etiketleri kullanılıyor)
+    // .card-body içindeki p'leri aramak daha doğru sonuç verebilir
+    const $menuContainer = $('.card-body').first();
+    const tarih = $menuContainer.find('h5.card-title').text().trim() || 'Tarih Bulunamadı';
 
-    $menuList.find('li').each((i, el) => {
+    $menuContainer.find('p').each((i, el) => { // 'ul li' yerine 'p' etiketlerini arıyoruz
       const itemText = $(el).text().trim();
-      if (itemText) {
+      if (itemText && itemText.length > 2) { // Boş paragrafları alma
         menuItems.push(itemText);
       }
     });
 
-    // Günün tarihini de bulmaya çalışalım (Örnek: ilk 'h5' etiketi)
-    const tarih = $('h5.card-title').first().text().trim() || 'Tarih Bulunamadı';
+    // Eğer 'p' etiketleri çalışmazsa, sizin istediğiniz 'ul li' yöntemine dönün:
+    if (menuItems.length === 0) {
+        $('ul').first().find('li').each((i, el) => {
+            const itemText = $(el).text().trim();
+            if (itemText) {
+                menuItems.push(itemText);
+            }
+        });
+    }
 
     // 4. Veriyi XML formatına dönüştür
     const root = create({ version: '1.0', encoding: 'UTF-8' })
