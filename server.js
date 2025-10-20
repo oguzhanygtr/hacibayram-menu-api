@@ -15,7 +15,7 @@ app.get("/menu", async (req, res) => {
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage",
         "--disable-gpu"
-      ],
+      ]
     });
 
     const page = await browser.newPage();
