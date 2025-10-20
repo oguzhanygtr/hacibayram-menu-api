@@ -9,8 +9,14 @@ const MENU_URL = "https://yemek.hacibayram.edu.tr/";
 app.get("/menu", async (req, res) => {
   try {
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      headless: "new",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu"
+      ],
+      executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome-stable"
     });
 
     const page = await browser.newPage();
@@ -37,7 +43,7 @@ app.get("/menu", async (req, res) => {
 
     res.type("application/xml").send(xml.end({ prettyPrint: true }));
   } catch (err) {
-    console.error(err);
+    console.error("❌ Hata:", err.message);
     res
       .status(500)
       .type("application/xml")
@@ -45,4 +51,4 @@ app.get("/menu", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Server çalışıyor: http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`✅ Sunucu çalışıyor: http://localhost:${PORT}`));

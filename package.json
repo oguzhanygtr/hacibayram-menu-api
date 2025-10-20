@@ -1,7 +1,9 @@
 {
   "name": "hacibayram-menu-api",
   "version": "1.0.0",
+  "description": "Hacı Bayram yemek menüsü için XML proxy API",
   "type": "module",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
@@ -9,5 +11,8 @@
     "express": "^4.18.2",
     "puppeteer": "^24.2.0",
     "xmlbuilder2": "^3.0.2"
+  },
+  "puppeteer": {
+    "skip_download": true
   }
 }
