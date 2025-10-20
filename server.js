@@ -5,7 +5,7 @@ const { create } = require('xmlbuilder2');
 const https = require('https'); // SSL hatası için
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // OnRender portu
 const YEMEK_URL = 'https://yemek.hacibayram.edu.tr/';
 
 // SSL/TLS doğrulamasını atlamak için (unable to verify the first certificate hatası için)
@@ -21,7 +21,7 @@ app.get('/menu.xml', async (req, res) => {
     // 2. HTML'i Cheerio ile yükle
     const $ = cheerio.load(data);
 
-    // 3. YENİ VE DOĞRU SEÇİCİLERİ KULLAN
+    // 3. DOĞRU SEÇİCİLERİ KULLAN
     
     // Tarihi al (.event-header içindeki p etiketi)
     const tarih = $('.event-header p').first().text().trim();
@@ -35,7 +35,7 @@ app.get('/menu.xml', async (req, res) => {
       }
     });
 
-    // Eğer menü bulunamadıysa hata fırlat (önemli)
+    // Eğer menü bulunamadıysa hata fırlat
     if (menuItems.length === 0) {
         throw new Error('Menü listesi (ul#list li) bulunamadı veya boş. HTML yapısı değişmiş olabilir.');
     }
@@ -58,7 +58,7 @@ app.get('/menu.xml', async (req, res) => {
     res.send(xmlString);
 
   } catch (error) {
-    console.error(error); // Hata olursa logla
+    console.error(error); // Hata olursa sunucu loguna yaz
     res.status(500).type('application/xml').send('<error><mesaj>Menü alınamadı.</mesaj><detay>' + error.message + '</detay></error>');
   }
 });
