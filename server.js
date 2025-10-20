@@ -1,5 +1,5 @@
 import express from "express";
-import puppeteer from "puppeteer";
+import chromium from "chrome-aws-lambda";
 import { create } from "xmlbuilder2";
 
 const app = express();
@@ -8,10 +8,12 @@ const MENU_URL = "https://yemek.hacibayram.edu.tr/";
 
 app.get("/menu", async (req, res) => {
   try {
-    const browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    const browser = await chromium.puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
     });
+
     const page = await browser.newPage();
     await page.goto(MENU_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
@@ -23,7 +25,8 @@ app.get("/menu", async (req, res) => {
 
     await browser.close();
 
-    const xml = create({ version: "1.0" }).ele("menu")
+    const xml = create({ version: "1.0" })
+      .ele("menu")
       .ele("gun").txt(data.gun).up()
       .ele("yemekler");
 
@@ -36,7 +39,9 @@ app.get("/menu", async (req, res) => {
     res.type("application/xml").send(xml.end({ prettyPrint: true }));
   } catch (err) {
     console.error(err);
-    res.status(500).type("application/xml").send(`<menu><gun>Günün Menüsü</gun><yemekler><yemek>Sunucu hatası: ${err.message}</yemek></yemekler></menu>`);
+    res.status(500)
+      .type("application/xml")
+      .send(`<menu><gun>Günün Menüsü</gun><yemekler><yemek>Sunucu hatası: ${err.message}</yemek></yemekler></menu>`);
   }
 });
 
