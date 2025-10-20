@@ -10,10 +10,7 @@ app.get("/menu", async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-      ],
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
     });
 
     const page = await browser.newPage();
@@ -26,9 +23,9 @@ app.get("/menu", async (req, res) => {
 
     await browser.close();
 
-    let root;
+    let xml;
     if (menuItems.length > 0) {
-      root = create({ version: "1.0" })
+      const root = create({ version: "1.0" })
         .ele("menu")
         .ele("gun").txt("Günün Menüsü").up()
         .ele("yemekler");
@@ -37,9 +34,9 @@ app.get("/menu", async (req, res) => {
         root.ele("yemek").txt(yemek).up();
       }
 
-      root = root.end({ prettyPrint: true });
+      xml = root.end({ prettyPrint: true });
     } else {
-      root = create({ version: "1.0" })
+      xml = create({ version: "1.0" })
         .ele("menu")
         .ele("gun").txt("Günün Menüsü").up()
         .ele("yemekler")
@@ -47,7 +44,7 @@ app.get("/menu", async (req, res) => {
         .end({ prettyPrint: true });
     }
 
-    res.type("application/xml").send(root);
+    res.type("application/xml").send(xml);
   } catch (err) {
     console.error("❌ Hata:", err.message);
     const xmlError = create({ version: "1.0" })
