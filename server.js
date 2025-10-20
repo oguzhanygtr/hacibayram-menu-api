@@ -16,7 +16,6 @@ app.get("/menu", async (req, res) => {
         "--disable-dev-shm-usage",
         "--disable-gpu"
       ],
-      executablePath: process.env.CHROME_PATH || "/usr/bin/google-chrome-stable"
     });
 
     const page = await browser.newPage();

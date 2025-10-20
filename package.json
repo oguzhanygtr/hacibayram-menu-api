@@ -12,7 +12,4 @@
     "puppeteer": "^24.2.0",
     "xmlbuilder2": "^3.0.2"
   },
-  "puppeteer": {
-    "skip_download": true
-  }
 }
