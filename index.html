@@ -1,29 +1,30 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>Yemek Menüsü</title>
+  <meta charset="UTF-8" />
+  <title>Yemek Menüsü</title>
 </head>
 <body>
-<h1>Bugünün Yemek Menüsü</h1>
-<div id="menu"></div>
+  <h1>Bugünün Yemek Menüsü</h1>
+  <ul id="menu"></ul>
 
-<script>
-fetch('yemek_menusu.xml')
-    .then(res => res.text())
-    .then(str => new window.DOMParser().parseFromString(str, "text/xml"))
-    .then(data => {
-        const yemekler = data.getElementsByTagName("Yemek");
-        let html = "<ul>";
-        for(let i=0; i < yemekler.length; i++) {
-            html += "<li>" + yemekler[i].textContent + "</li>";
+  <script>
+    fetch('/api/yemekxml')
+      .then(res => res.text())
+      .then(str => (new window.DOMParser()).parseFromString(str, 'application/xml'))
+      .then(data => {
+        const yemekler = data.getElementsByTagName('Yemek');
+        const ul = document.getElementById('menu');
+        ul.innerHTML = '';
+        for(let i = 0; i < yemekler.length; i++) {
+          const li = document.createElement('li');
+          li.textContent = yemekler[i].textContent;
+          ul.appendChild(li);
         }
-        html += "</ul>";
-        document.getElementById("menu").innerHTML = html;
-    })
-    .catch(() => {
-        document.getElementById("menu").innerText = "Menü yüklenirken hata oluştu.";
-    });
-</script>
+      })
+      .catch(() => {
+        document.getElementById('menu').textContent = 'Menü yüklenirken hata oluştu.';
+      });
+  </script>
 </body>
 </html>
