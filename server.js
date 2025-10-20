@@ -1,6 +1,5 @@
 const express = require('express');
-const axios = require('axios');
-const cheerio = require('cheerio');
+const puppeteer = require('puppeteer');
 const { Builder } = require('xml2js');
 
 const app = express();
@@ -8,34 +7,27 @@ const port = process.env.PORT || 3000;
 
 app.get('/api/yemekxml', async (req, res) => {
   try {
-    // Site HTML'sini çek
-    const { data } = await axios.get('https://yemek.hacıbayram.edu.tr');
+    const browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    const page = await browser.newPage();
+    await page.goto('https://yemek.hacıbayram.edu.tr', { waitUntil: 'networkidle2' });
 
-    // HTML'i yükle
-    const $ = cheerio.load(data);
-
-    // ul#list altındaki li elementlerini al
-    const yemekler = [];
-    $('#list > li').each((_, el) => {
-      const yemek = $(el).text().trim();
-      if(yemek) yemekler.push(yemek);
+    const yemekler = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('#list > li'))
+        .map(el => el.innerText.trim());
     });
 
-    if(yemekler.length === 0) {
-      throw new Error('Menü öğeleri bulunamadı');
-    }
+    await browser.close();
 
-    // Menü öğelerini XML formatına dönüştür
+    if (!yemekler.length) throw new Error('Menü elemanı bulunamadı');
+
     const builder = new Builder({ headless: true, rootName: 'YemekMenusu' });
-    const xmlObj = { Yemek: yemekler };
-    const xml = builder.buildObject(xmlObj);
+    const xml = builder.buildObject({ Yemek: yemekler });
 
-    // XML yanıtı gönder
     res.header('Content-Type', 'application/xml');
     res.send(xml);
-
   } catch (error) {
-    // Hata logu ve kullanıcıya dönülüş
     console.error('Menü çekilemedi:', error.message);
     res.status(500).send('<error>Menü bilgisi alınamadı.</error>');
   }
