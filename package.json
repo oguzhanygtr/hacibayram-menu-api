@@ -1,15 +1,15 @@
 {
-  "name": "hacibayram-menu-api",
+  "name": "hacibayram-menu-xml",
   "version": "1.0.0",
-  "type": "module",
-  "main": "server.js",
+  "description": "Hacı Bayram Veli Üniversitesi yemek menüsünü XML olarak sunar.",
+  "main": "index.js",
   "scripts": {
-    "build": "npx puppeteer browsers install chrome",
-    "start": "node server.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "puppeteer": "^24.5.0",
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0-rc.12",
+    "express": "^4.19.2",
     "xmlbuilder2": "^3.1.1"
   }
 }
