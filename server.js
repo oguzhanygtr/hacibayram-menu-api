@@ -8,27 +8,32 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const MENU_URL = "https://yemek.hacibayram.edu.tr/";
 
-const agent = new https.Agent({ rejectUnauthorized: false }); // SSL doğrulamasını kapat
+const agent = new https.Agent({ rejectUnauthorized: false }); // Render SSL doğrulama kapalı
 
 app.get("/", (req, res) => {
-  res.send("<h2>Hacı Bayram Menü Proxy Çalışıyor ✅<br/>/menu endpoint'ini deneyin.</h2>");
+  res.send(`
+    <h2>🍽 Hacı Bayram Menü Proxy</h2>
+    <p>Gerçek menüyü XML olarak görmek için <a href="/menu">/menu</a> endpoint’ini ziyaret edin.</p>
+  `);
 });
 
 app.get("/menu", async (req, res) => {
   try {
+    // Menü sayfasını çek
     const response = await axios.get(MENU_URL, { httpsAgent: agent });
     const $ = cheerio.load(response.data);
 
-    // Menü listesini yakala (örnek: <div class="menu"><ul><li>...</li></ul></div>)
-    const gun = $("h2, .menuHeader, .menuTitle").first().text().trim() || "Günün Menüsü";
+    // Gün bilgisini bul
+    const gun = $(".calendar-events .event-header p").first().text().trim() || "Günün Menüsü";
 
+    // Menüdeki yemekleri al
     const yemekler = [];
-    $("ul li, .menu ul li").each((i, el) => {
-      const text = $(el).text().trim();
-      if (text.length > 0) yemekler.push(text);
+    $(".calendar-events ul#list li").each((i, el) => {
+      const yemek = $(el).text().trim();
+      if (yemek) yemekler.push(yemek);
     });
 
-    // Eğer liste boşsa fallback döndür
+    // Eğer hiç yemek yoksa bilgi mesajı ver
     if (yemekler.length === 0) {
       yemekler.push("Menü şu anda görüntülenemiyor.");
     }
@@ -47,7 +52,7 @@ app.get("/menu", async (req, res) => {
 
   } catch (error) {
     console.error("Hata:", error.message);
-    res.status(500).send("<error>Menü alınamadı</error>");
+    res.status(500).send(`<error>Menü alınamadı: ${error.message}</error>`);
   }
 });
 
