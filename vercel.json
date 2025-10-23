@@ -1,10 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "api/menu.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "routes": [
     { "src": "/menu", "dest": "/api/menu.js" }
   ]
