@@ -1,9 +1,14 @@
 import fetch from "node-fetch";
 import * as cheerio from "cheerio";
+import https from "https";
 
 export default async function handler(req, res) {
   try {
-    const response = await fetch("https://yemek.hacibayram.edu.tr");
+    const agent = new https.Agent({
+      rejectUnauthorized: false // SSL sertifika hatalarını yok say
+    });
+
+    const response = await fetch("https://yemek.hacibayram.edu.tr", { agent });
     const html = await response.text();
 
     const $ = cheerio.load(html);
