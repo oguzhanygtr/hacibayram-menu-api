@@ -1,55 +1,33 @@
-import express from "express";
-import chrome from "chrome-aws-lambda";
-import puppeteer from "puppeteer-core";
+import axios from "axios";
+import * as cheerio from "cheerio";
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-const MENU_URL = "https://yemek.hacibayram.edu.tr/";
-
-app.get("/menu.xml", async (req, res) => {
-  res.set("Content-Type", "application/xml");
-
+export default async function handler(req, res) {
   try {
-    const executablePath =
-      (await chrome.executablePath) ||
-      "/usr/bin/google-chrome";
+    const url = "https://yemek.hacibayram.edu.tr/";
+    const { data } = await axios.get(url);
 
-    const browser = await puppeteer.launch({
-      args: chrome.args,
-      executablePath,
-      headless: true,
+    const $ = cheerio.load(data);
+
+    // Menü yapısına göre düzenle
+    const gun = $("h4").first().text().trim();
+    const yemekler = [];
+
+    $("li").each((i, el) => {
+      yemekler.push($(el).text().trim());
     });
 
-    const page = await browser.newPage();
-    await page.goto(MENU_URL, { waitUntil: "networkidle2", timeout: 60000 });
-
-    const data = await page.evaluate(() => {
-      const gun = document.querySelector("h2")?.innerText?.trim() || "Günün Menüsü";
-      const yemekler = Array.from(document.querySelectorAll("ul#list li")).map(li => li.innerText.trim());
-      return { gun, yemekler };
-    });
-
-    await browser.close();
-
+    // XML formatı oluştur
     const xml = `
 <menu>
-  <gun>${data.gun}</gun>
+  <gun>${gun}</gun>
   <yemekler>
-    ${data.yemekler.map(y => `<yemek>${y}</yemek>`).join("\n    ")}
+    ${yemekler.map(y => `<yemek>${y}</yemek>`).join("\n    ")}
   </yemekler>
-</menu>`.trim();
+</menu>`;
 
-    res.send(xml);
-  } catch (err) {
-    res.status(500).send(`
-<menu>
-  <gun>Günün Menüsü</gun>
-  <yemekler>
-    <yemek>Sunucu hatası: ${err.message}</yemek>
-  </yemekler>
-</menu>`);
+    res.setHeader("Content-Type", "application/xml");
+    res.status(200).send(xml);
+  } catch (error) {
+    res.status(500).send(`<error>${error.message}</error>`);
   }
-});
-
-app.listen(PORT, () => console.log(`✅ Server running on ${PORT}`));
-export default app;
+}
