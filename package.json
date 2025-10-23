@@ -1,9 +1,12 @@
 {
-  "name": "hacibayram-menu-api",
+  "name": "hacibayram-menu-scraper",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
-    "puppeteer-core": "^24.25.0",
-    "chrome-aws-lambda": "^15.0.0"
+    "puppeteer": "^24.2.0",
+    "fs-extra": "^11.2.0"
   }
 }
