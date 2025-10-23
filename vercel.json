@@ -2,8 +2,9 @@
   "version": 2,
   "functions": {
     "api/menu.js": {
+      "runtime": "nodejs18.x",
       "memory": 1024,
-      "maxDuration": 20
+      "maxDuration": 10
     }
   },
   "routes": [
