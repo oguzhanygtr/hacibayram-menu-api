@@ -7,7 +7,8 @@ export default async function handler(req, res) {
     const html = await response.text();
 
     const $ = cheerio.load(html);
-    const gun = $(".event-header p").text().trim();
+
+    const gun = $(".event-header p").first().text().trim();
     const yemekler = $(".event-list li")
       .map((_, el) => $(el).text().trim())
       .get()
