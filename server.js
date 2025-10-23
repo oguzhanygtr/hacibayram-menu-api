@@ -1,36 +1,63 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
-const { Builder } = require('xml2js');
+import express from "express";
+import puppeteer from "puppeteer";
 
 const app = express();
-const port = process.env.PORT || 3000;
 
-app.get('/api/yemekxml', async (req, res) => {
+// Menü verisini çekecek URL (örnek)
+const MENU_URL = "https://yemek.hacibayram.edu.tr/";
+
+app.get("/menu.xml", async (req, res) => {
+  res.set("Content-Type", "application/xml");
+
   try {
     const browser = await puppeteer.launch({
+      headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-    const page = await browser.newPage();
-    await page.goto('https://yemek.hacıbayram.edu.tr', { waitUntil: 'networkidle2' });
 
-    const yemekler = await page.evaluate(() => {
-      return Array.from(document.querySelectorAll('#list > li'))
-        .map(el => el.innerText.trim());
+    const page = await browser.newPage();
+    await page.goto(MENU_URL, { waitUntil: "networkidle2", timeout: 60000 });
+
+    // Sayfadan menü elemanlarını çek
+    const yemekListesi = await page.evaluate(() => {
+      const gun = document.querySelector("h2")?.innerText?.trim() || "Günün Menüsü";
+      const yemekler = Array.from(document.querySelectorAll("ul#list li"))
+        .map(li => li.innerText.trim());
+      return { gun, yemekler };
     });
 
     await browser.close();
 
-    if (!yemekler.length) throw new Error('Menü elemanı bulunamadı');
+    // XML formatında döndür
+    const xml = `
+<menu>
+  <gun>${yemekListesi.gun}</gun>
+  <yemekler>
+    ${yemekListesi.yemekler.map(y => `<yemek>${y}</yemek>`).join("\n    ")}
+  </yemekler>
+</menu>
+    `.trim();
 
-    const builder = new Builder({ headless: true, rootName: 'YemekMenusu' });
-    const xml = builder.buildObject({ Yemek: yemekler });
-
-    res.header('Content-Type', 'application/xml');
     res.send(xml);
-  } catch (error) {
-    console.error('Menü çekilemedi:', error.message);
-    res.status(500).send('<error>Menü bilgisi alınamadı.</error>');
+  } catch (err) {
+    const hata = `
+<menu>
+  <gun>Günün Menüsü</gun>
+  <yemekler>
+    <yemek>Sunucu hatası: ${err.message}</yemek>
+  </yemekler>
+</menu>
+    `.trim();
+
+    res.status(500).send(hata);
   }
 });
 
-app.listen(port, () => console.log(`Sunucu ${port} portunda çalışıyor.`));
+// Vercel için export
+export default app;
+
+// Lokal test için (opsiyonel)
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`✅ Local server running on http://localhost:${PORT}`));
+}
