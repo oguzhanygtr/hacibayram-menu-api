@@ -1,28 +1,28 @@
-import puppeteer from "puppeteer";
-import fs from "fs-extra";
+import chromium from "@sparticuz/chromium-min";
+import puppeteer from "puppeteer-core";
 
-async function run() {
+export async function getMenuData() {
   const browser = await puppeteer.launch({
+    args: chromium.args,
+    executablePath:
+      process.env.CHROME_EXECUTABLE_PATH || (await chromium.executablePath()),
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    ignoreHTTPSErrors: true,
   });
 
   const page = await browser.newPage();
-
-  console.log("🔗 Siteye gidiliyor...");
-  await page.goto("https://yemek.hacibayram.edu.tr/", {
+  await page.goto("https://yemek.hacibayram.edu.tr", {
     waitUntil: "networkidle0",
-    timeout: 60000
+    timeout: 60000,
   });
 
-  // Dinamik JS ile yüklenen yemekleri al
-  const result = await page.evaluate(() => {
-    const gunEl = document.querySelector(".calendar-active");
+  const data = await page.evaluate(() => {
+    const gunEl = document.querySelector(".event-header p");
     const gun = gunEl ? gunEl.textContent.trim() : "";
 
     const yemekList = [];
     const lis = document.querySelectorAll("#list li");
-    lis.forEach(li => {
+    lis.forEach((li) => {
       const text = li.textContent.trim();
       if (text) yemekList.push(text);
     });
@@ -31,25 +31,5 @@ async function run() {
   });
 
   await browser.close();
-
-  if (!result.yemekList.length) {
-    console.warn("⚠️ Yemek listesi bulunamadı. Site yapısı değişmiş olabilir.");
-  }
-
-  const xml = `
-<menu>
-  <gun>${result.gun}</gun>
-  <yemekler>
-    ${result.yemekList.map(y => `<yemek>${y}</yemek>`).join("\n    ")}
-  </yemekler>
-</menu>`;
-
-  // XML dosyasına kaydet
-  await fs.outputFile("menu.xml", xml.trim(), "utf8");
-
-  console.log("✅ menu.xml dosyası oluşturuldu.");
+  return data;
 }
-
-run().catch(err => {
-  console.error("❌ Hata oluştu:", err);
-});
