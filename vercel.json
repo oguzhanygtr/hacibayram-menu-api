@@ -1,9 +1,14 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "server.js", "use": "@vercel/node" }
-  ],
+  "functions": {
+    "api/*.js": {
+      "memory": 1024,
+      "maxDuration": 20
+    }
+  },
   "routes": [
-    { "src": "/(.*)", "dest": "/server.js" }
+    { "src": "/menu", "dest": "/api/menu.js" },
+    { "src": "/menu.json", "dest": "/api/menu.json.js" },
+    { "src": "/menu.rss", "dest": "/api/menu.rss.js" }
   ]
 }
