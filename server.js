@@ -1,31 +1,42 @@
-import chromium from "chrome-aws-lambda";
-import puppeteer from "puppeteer-core";
+import puppeteer from "puppeteer";
+import fs from "fs-extra";
 
-export default async function handler(req, res) {
-  let browser;
-  try {
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+async function run() {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  });
+
+  const page = await browser.newPage();
+
+  console.log("🔗 Siteye gidiliyor...");
+  await page.goto("https://yemek.hacibayram.edu.tr/", {
+    waitUntil: "networkidle0",
+    timeout: 60000
+  });
+
+  // Dinamik JS ile yüklenen yemekleri al
+  const result = await page.evaluate(() => {
+    const gunEl = document.querySelector(".calendar-active");
+    const gun = gunEl ? gunEl.textContent.trim() : "";
+
+    const yemekList = [];
+    const lis = document.querySelectorAll("#list li");
+    lis.forEach(li => {
+      const text = li.textContent.trim();
+      if (text) yemekList.push(text);
     });
 
-    const page = await browser.newPage();
-    await page.goto("https://yemek.hacibayram.edu.tr/", { waitUntil: "networkidle0" });
+    return { gun, yemekList };
+  });
 
-    const result = await page.evaluate(() => {
-      const gunEl = document.querySelector(".calendar-active");
-      const gun = gunEl ? gunEl.textContent.trim() : "";
+  await browser.close();
 
-      const yemekList = [];
-      const lis = document.querySelectorAll("#list li");
-      lis.forEach(li => yemekList.push(li.textContent.trim()));
+  if (!result.yemekList.length) {
+    console.warn("⚠️ Yemek listesi bulunamadı. Site yapısı değişmiş olabilir.");
+  }
 
-      return { gun, yemekList };
-    });
-
-    const xml = `
+  const xml = `
 <menu>
   <gun>${result.gun}</gun>
   <yemekler>
@@ -33,12 +44,12 @@ export default async function handler(req, res) {
   </yemekler>
 </menu>`;
 
-    res.setHeader("Content-Type", "application/xml");
-    res.status(200).send(xml);
+  // XML dosyasına kaydet
+  await fs.outputFile("menu.xml", xml.trim(), "utf8");
 
-  } catch (err) {
-    res.status(500).send(`<error>${err.message}</error>`);
-  } finally {
-    if (browser) await browser.close();
-  }
+  console.log("✅ menu.xml dosyası oluşturuldu.");
 }
+
+run().catch(err => {
+  console.error("❌ Hata oluştu:", err);
+});
