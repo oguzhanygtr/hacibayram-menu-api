@@ -1,39 +1,51 @@
-import axios from "axios";
-import https from "https";
-import * as cheerio from "cheerio";
+import chromium from "@sparticuz/chromium-min";
+import puppeteer from "puppeteer-core";
 
 export default async function handler(req, res) {
+  let browser;
   try {
-    const url = "https://yemek.hacibayram.edu.tr/";
+    // Chromium başlat
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
 
-    // SSL hatası için
-    const agent = new https.Agent({ rejectUnauthorized: false });
+    const page = await browser.newPage();
 
-    const { data } = await axios.get(url, { httpsAgent: agent });
-    const $ = cheerio.load(data);
+    // Siteye git
+    await page.goto("https://yemek.hacibayram.edu.tr/", {
+      waitUntil: "networkidle0",
+    });
 
-    // Gün tarihi
-    const gun = $(".calendar-active").text().trim(); // aktif gün div'i
+    // Sayfadaki yemekleri çek
+    const result = await page.evaluate(() => {
+      const gunEl = document.querySelector(".calendar-active");
+      const gun = gunEl ? gunEl.textContent.trim() : "";
 
-    // Yemek listesi
-    const yemekler = [];
-    $("#list li").each((i, el) => {
-      yemekler.push($(el).text().trim());
+      const yemekList = [];
+      const lis = document.querySelectorAll("#list li");
+      lis.forEach(li => yemekList.push(li.textContent.trim()));
+
+      return { gun, yemekList };
     });
 
     // XML oluştur
     const xml = `
 <menu>
-  <gun>${gun}</gun>
+  <gun>${result.gun}</gun>
   <yemekler>
-    ${yemekler.map(y => `<yemek>${y}</yemek>`).join("\n    ")}
+    ${result.yemekList.map(y => `<yemek>${y}</yemek>`).join("\n    ")}
   </yemekler>
 </menu>`;
 
     res.setHeader("Content-Type", "application/xml");
     res.status(200).send(xml);
 
-  } catch (error) {
-    res.status(500).send(`<error>${error.message}</error>`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(`<error>${err.message}</error>`);
+  } finally {
+    if (browser) await browser.close();
   }
 }
