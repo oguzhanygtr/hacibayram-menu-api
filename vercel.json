@@ -1,14 +1,12 @@
 {
   "version": 2,
   "functions": {
-    "api/*.js": {
+    "api/menu.js": {
       "memory": 1024,
       "maxDuration": 20
     }
   },
   "routes": [
-    { "src": "/menu", "dest": "/api/menu.js" },
-    { "src": "/menu.json", "dest": "/api/menu.json.js" },
-    { "src": "/menu.rss", "dest": "/api/menu.rss.js" }
+    { "src": "/menu", "dest": "/api/menu.js" }
   ]
 }
