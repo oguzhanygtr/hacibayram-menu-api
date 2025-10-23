@@ -1,40 +1,31 @@
 import fetch from "node-fetch";
-import * as cheerio from "cheerio";
-import https from "https";
 
 export default async function handler(req, res) {
   try {
-    const agent = new https.Agent({
-      rejectUnauthorized: false // SSL sertifika hatalarını yok say
-    });
+    // JSON verisini çek
+    const response = await fetch("https://yemek.hacibayram.edu.tr/load-menu");
+    const data = await response.json();
 
-    const response = await fetch("https://yemek.hacibayram.edu.tr", { agent });
-    const html = await response.text();
-
-    const $ = cheerio.load(html);
-
-    const gun = $(".event-header p").first().text().trim();
-    const yemekler = $(".event-list li")
-      .map((_, el) => $(el).text().trim())
-      .get()
-      .filter(Boolean);
-
-    if (!yemekler.length) {
-      throw new Error("Menü bulunamadı. Site yapısı değişmiş olabilir.");
-    }
-
+    // JSON'dan XML formatına dönüştür
     const xml = `
 <menu>
-  <gun>${gun}</gun>
+  <gun>${data.gun}</gun>
   <yemekler>
-    ${yemekler.map((y) => `<yemek>${y}</yemek>`).join("\n    ")}
+    ${data.yemekler.map(y => `
+      <yemek>
+        <ad>${y.ad}</ad>
+        <kalori>${y.kalori}</kalori>
+      </yemek>
+    `).join("\n    ")}
   </yemekler>
-</menu>`.trim();
+</menu>
+`.trim();
 
+    // XML'i döndür
     res.setHeader("Content-Type", "application/xml; charset=utf-8");
     res.status(200).send(xml);
   } catch (err) {
-    console.error(err);
+    console.error("Hata:", err);
     res.status(500).send(`<error>${err.message}</error>`);
   }
 }
