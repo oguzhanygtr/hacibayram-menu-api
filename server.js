@@ -1,5 +1,5 @@
 import express from "express";
-import chromium from "@sparticuz/chromium-min";
+import chrome from "chrome-aws-lambda";
 import puppeteer from "puppeteer-core";
 
 const app = express();
@@ -10,24 +10,22 @@ app.get("/menu.xml", async (req, res) => {
   res.set("Content-Type", "application/xml");
 
   try {
+    const executablePath =
+      (await chrome.executablePath) ||
+      "/usr/bin/google-chrome";
+
     const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath:
-        process.env.CHROME_EXECUTABLE_PATH ||
-        (await chromium.executablePath()),
-      headless: chromium.headless,
+      args: chrome.args,
+      executablePath,
+      headless: true,
     });
 
     const page = await browser.newPage();
     await page.goto(MENU_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
     const data = await page.evaluate(() => {
-      const gun =
-        document.querySelector("h2")?.innerText?.trim() || "Günün Menüsü";
-      const yemekler = Array.from(document.querySelectorAll("ul#list li")).map(
-        (li) => li.innerText.trim()
-      );
+      const gun = document.querySelector("h2")?.innerText?.trim() || "Günün Menüsü";
+      const yemekler = Array.from(document.querySelectorAll("ul#list li")).map(li => li.innerText.trim());
       return { gun, yemekler };
     });
 
@@ -37,7 +35,7 @@ app.get("/menu.xml", async (req, res) => {
 <menu>
   <gun>${data.gun}</gun>
   <yemekler>
-    ${data.yemekler.map((y) => `<yemek>${y}</yemek>`).join("\n    ")}
+    ${data.yemekler.map(y => `<yemek>${y}</yemek>`).join("\n    ")}
   </yemekler>
 </menu>`.trim();
 
@@ -53,6 +51,5 @@ app.get("/menu.xml", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
-
+app.listen(PORT, () => console.log(`✅ Server running on ${PORT}`));
 export default app;
