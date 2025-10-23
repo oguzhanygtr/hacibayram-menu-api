@@ -3,20 +3,25 @@ import path from "path";
 
 export default function handler(req, res) {
   try {
+    // menu.json dosyasını oku
     const filePath = path.join(process.cwd(), "data", "menu.json");
     const raw = fs.readFileSync(filePath, "utf8");
-    const menu = JSON.parse(raw);
+    const menuData = JSON.parse(raw);
 
+    // XML oluştur
     const xml = `<menu>
-  <gun>${menu.gun}</gun>
-  <yemekler>
-    ${menu.yemekler.map(y => `<yemek>${y}</yemek>`).join("\n    ")}
-  </yemekler>
+  ${menuData.map(gun => `
+  <gun tarih="${gun.menu_date}">
+    <yemekler>
+      ${gun.food_list.map(y => `<yemek>${y}</yemek>`).join("\n      ")}
+    </yemekler>
+  </gun>`).join("")}
 </menu>`;
 
     res.setHeader("Content-Type", "application/xml");
     res.status(200).send(xml);
   } catch (err) {
+    console.error(err);
     res.status(500).send(`<menu>
   <gun/>
   <yemekler></yemekler>
