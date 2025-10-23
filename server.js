@@ -1,9 +1,9 @@
 import express from "express";
-import puppeteer from "puppeteer";
+import chromium from "@sparticuz/chromium-min";
+import puppeteer from "puppeteer-core";
 
 const app = express();
-
-// Menü verisini çekecek URL (örnek)
+const PORT = process.env.PORT || 3000;
 const MENU_URL = "https://yemek.hacibayram.edu.tr/";
 
 app.get("/menu.xml", async (req, res) => {
@@ -11,53 +11,48 @@ app.get("/menu.xml", async (req, res) => {
 
   try {
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath:
+        process.env.CHROME_EXECUTABLE_PATH ||
+        (await chromium.executablePath()),
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
     await page.goto(MENU_URL, { waitUntil: "networkidle2", timeout: 60000 });
 
-    // Sayfadan menü elemanlarını çek
-    const yemekListesi = await page.evaluate(() => {
-      const gun = document.querySelector("h2")?.innerText?.trim() || "Günün Menüsü";
-      const yemekler = Array.from(document.querySelectorAll("ul#list li"))
-        .map(li => li.innerText.trim());
+    const data = await page.evaluate(() => {
+      const gun =
+        document.querySelector("h2")?.innerText?.trim() || "Günün Menüsü";
+      const yemekler = Array.from(document.querySelectorAll("ul#list li")).map(
+        (li) => li.innerText.trim()
+      );
       return { gun, yemekler };
     });
 
     await browser.close();
 
-    // XML formatında döndür
     const xml = `
 <menu>
-  <gun>${yemekListesi.gun}</gun>
+  <gun>${data.gun}</gun>
   <yemekler>
-    ${yemekListesi.yemekler.map(y => `<yemek>${y}</yemek>`).join("\n    ")}
+    ${data.yemekler.map((y) => `<yemek>${y}</yemek>`).join("\n    ")}
   </yemekler>
-</menu>
-    `.trim();
+</menu>`.trim();
 
     res.send(xml);
   } catch (err) {
-    const hata = `
+    res.status(500).send(`
 <menu>
   <gun>Günün Menüsü</gun>
   <yemekler>
     <yemek>Sunucu hatası: ${err.message}</yemek>
   </yemekler>
-</menu>
-    `.trim();
-
-    res.status(500).send(hata);
+</menu>`);
   }
 });
 
-// Vercel için export
-export default app;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
 
-// Lokal test için (opsiyonel)
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => console.log(`✅ Local server running on http://localhost:${PORT}`));
-}
+export default app;
