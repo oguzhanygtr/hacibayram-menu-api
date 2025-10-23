@@ -1,14 +1,20 @@
 import axios from "axios";
+import https from "https";
 import * as cheerio from "cheerio";
 
 export default async function handler(req, res) {
   try {
     const url = "https://yemek.hacibayram.edu.tr/";
-    const { data } = await axios.get(url);
+
+    // SSL doğrulamasını kapatan agent
+    const agent = new https.Agent({  
+      rejectUnauthorized: false  
+    });
+
+    const { data } = await axios.get(url, { httpsAgent: agent });
 
     const $ = cheerio.load(data);
 
-    // Menü yapısına göre düzenle
     const gun = $("h4").first().text().trim();
     const yemekler = [];
 
@@ -16,7 +22,6 @@ export default async function handler(req, res) {
       yemekler.push($(el).text().trim());
     });
 
-    // XML formatı oluştur
     const xml = `
 <menu>
   <gun>${gun}</gun>
