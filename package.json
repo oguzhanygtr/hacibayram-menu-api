@@ -1,4 +1,7 @@
 {
+  "name": "hacibayram-menu-xml",
+  "version": "1.0.0",
+  "description": "Hacı Bayram Veli Üniversitesi yemek menüsünü XML olarak sunar.",
   "type": "module",
   "dependencies": {
     "node-fetch": "3.3.2",
