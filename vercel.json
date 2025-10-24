@@ -1,6 +1,11 @@
 {
   "version": 2,
+  "builds": [
+    { "src": "api/menu.js", "use": "@vercel/node" },
+    { "src": "api/menu-html.js", "use": "@vercel/node" }
+  ],
   "routes": [
-    { "src": "/menu", "dest": "/api/menu.js" }
+    { "src": "/menu", "dest": "/api/menu.js" },
+    { "src": "/menu-html", "dest": "/api/menu-html.js" }
   ]
 }
