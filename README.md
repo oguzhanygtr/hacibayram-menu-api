@@ -16,6 +16,7 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 ---
 
 ## 📁 Klasör Yapısı
+
 ├── api/
 │ ├── menu.js # XML çıktısı veren API endpoint
 │ └── menu-html.js # CSS tasarımlı HTML çıktısı
