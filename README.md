@@ -26,8 +26,9 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 
 
 ---
-|🗓️ Günlük Geliştirme Süreci|
+| 🗓️ Günlük Geliştirme Süreci |
 | Tarih | Geliştirme Notu |
+|-------|-----------------|
 |  **17 Ekim 2025 **	| Proje oluşturuldu. Express.js tabanlı temel API yapısı kuruldu. |
 |  **18 Ekim 2025 ** |	Puppeteer entegrasyonu yapıldı. Menü verileri HTML üzerinden test edildi. |
 |  **19 Ekim 2025 ** |	XML formatı eklendi, hata yakalama ve düzenli çıktı sağlandı. |
