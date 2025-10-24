@@ -3,7 +3,7 @@ import path from "path";
 
 export default function handler(req, res) {
   try {
-    const filePath = path.join(process.cwd(), "data", "menu.json");
+    const filePath = path.join(process.cwd(), "data", "https://yemek.hacibayram.edu.tr/load-menu");
     const raw = fs.readFileSync(filePath, "utf8");
     const menuData = JSON.parse(raw);
 
