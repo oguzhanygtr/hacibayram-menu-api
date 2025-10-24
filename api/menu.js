@@ -3,29 +3,43 @@ import path from "path";
 
 export default function handler(req, res) {
   try {
-    // menu.json dosyasını oku
     const filePath = path.join(process.cwd(), "data", "menu.json");
     const raw = fs.readFileSync(filePath, "utf8");
     const menuData = JSON.parse(raw);
 
-    // XML oluştur
-    const xml = `<menu>
-${menuData
-  .map(
-    (gun) => `
-  <gun tarih="${gun.menu_date}">
+    // Bilgisayar tarihini yyyy-mm-dd formatında al
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    // Bugünün menüsünü bul
+    const todayMenu = menuData.find((m) => m.menu_date === todayStr);
+
+    // XML formatında döndür
+    let xml;
+    if (todayMenu) {
+      xml = `<menu>
+  <gun tarih="${todayMenu.menu_date}">
     <yemekler>
-${gun.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")}
+${todayMenu.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")}
     </yemekler>
-  </gun>`
-  )
-  .join("\n")}
+  </gun>
 </menu>`;
+    } else {
+      xml = `<menu>
+  <gun tarih="${todayStr}"/>
+  <yemekler>
+    <yemek>Bugün için menü bulunamadı.</yemek>
+  </yemekler>
+</menu>`;
+    }
 
     res.setHeader("Content-Type", "application/xml; charset=utf-8");
     res.status(200).send(xml);
   } catch (err) {
-    console.error("XML oluşturulamadı:", err);
+    console.error("Hata:", err);
     res.status(500).send(`<menu>
   <gun/>
   <yemekler></yemekler>
