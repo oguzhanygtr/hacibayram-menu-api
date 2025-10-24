@@ -1,43 +1,61 @@
-import https from "https";
-import fetch from "node-fetch";
-import fs from "fs";
-import path from "path";
-
 export default async function handler(req, res) {
-  try {
-    const remoteUrl = "https://yemek.hacibayram.edu.tr/load-menu";
-    const agent = new https.Agent({ rejectUnauthorized: false });
+  const remoteUrl = "https://yemek.hacibayram.edu.tr/load-menu";
 
+  // 🧩 Yedek statik menü
+  const fallbackData = [
+    {
+      menu_date: "2025-10-20",
+      food_list: ["Mercimek Çorbası", "Tavuk Sote", "Pilav", "Ayran"],
+    },
+    {
+      menu_date: "2025-10-21",
+      food_list: ["Ezogelin", "Karnıyarık", "Bulgur Pilavı", "Tatlı"],
+    },
+  ];
+
+  try {
     let data;
+
     try {
-      // 🌐 Uzaktan çek
-      const response = await fetch(remoteUrl, { agent });
+      const response = await fetch(remoteUrl);
       data = await response.json();
     } catch {
-      // 💾 Ulaşamazsa yerel menu.json'dan oku
-      const filePath = path.join(process.cwd(), "public", "menu.json");
-      const local = fs.readFileSync(filePath, "utf8");
-      data = JSON.parse(local);
+      data = fallbackData; // siteye ulaşılamazsa yedek
     }
 
-    // 📅 Bugün ve sonraki 7 gün aralığı
+    // 📅 Haftalık menü (bugün + 6 gün)
     const today = new Date();
     const next7 = new Date(today);
     next7.setDate(today.getDate() + 7);
 
-    // 📋 Haftalık filtre
-    const haftalikMenu = data.filter((item) => {
+    const haftalik = data.filter((item) => {
       const tarih = new Date(item.menu_date);
       return tarih >= today && tarih <= next7;
     });
 
-    // 🔤 Basit HTML çıktı (CSS yok)
+    // 🧾 Basit HTML çıktı
     const html = `
-      <!DOCTYPE html>
       <html lang="tr">
-      <head>
-        <meta charset="UTF-8" />
-        <title>Haftalık Menü</title>
-      </head>
+      <head><meta charset="utf-8"><title>Haftalık Menü</title></head>
       <body>
-        <h2>Haftalık Menü (${today.toLocaleDateString("tr-TR")})<
+        <h2>Haftalık Menü (${today.toLocaleDateString("tr-TR")})</h2>
+        <ul>
+          ${haftalik
+            .map(
+              (gun) => `
+                <li><strong>${gun.menu_date}</strong>
+                  <ul>${gun.food_list.map((y) => `<li>${y}</li>`).join("")}</ul>
+                </li>`
+            )
+            .join("")}
+        </ul>
+      </body>
+      </html>
+    `;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.status(200).send(html);
+  } catch (err) {
+    res.status(500).send("<h3>Menü yüklenemedi.</h3>");
+  }
+}
