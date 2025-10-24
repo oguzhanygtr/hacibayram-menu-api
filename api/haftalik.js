@@ -1,29 +1,43 @@
+import https from "https";
 import fetch from "node-fetch";
 import fs from "fs";
-import https from "https";
+import path from "path";
 
 export default async function handler(req, res) {
   try {
-    const agent = new https.Agent({ rejectUnauthorized: false });
     const remoteUrl = "https://yemek.hacibayram.edu.tr/load-menu";
-    let data;
+    const agent = new https.Agent({ rejectUnauthorized: false });
 
-    // Uzaktan veri çek, hata olursa yerel menu.json'dan oku
+    let data;
     try {
+      // 🌐 Uzaktan çek
       const response = await fetch(remoteUrl, { agent });
       data = await response.json();
     } catch {
-      const local = fs.readFileSync("./public/menu.json", "utf8");
+      // 💾 Ulaşamazsa yerel menu.json'dan oku
+      const filePath = path.join(process.cwd(), "public", "menu.json");
+      const local = fs.readFileSync(filePath, "utf8");
       data = JSON.parse(local);
     }
 
-    if (!Array.isArray(data)) throw new Error("Veri geçersiz.");
-
-    // Haftalık filtre (bugünden +7 güne kadar)
+    // 📅 Bugün ve sonraki 7 gün aralığı
     const today = new Date();
     const next7 = new Date(today);
     next7.setDate(today.getDate() + 7);
 
-    const haftalikMenu = data.filter((m) => {
-      const d = new Date(m.menu_date);
-      return d >= today && d <= n
+    // 📋 Haftalık filtre
+    const haftalikMenu = data.filter((item) => {
+      const tarih = new Date(item.menu_date);
+      return tarih >= today && tarih <= next7;
+    });
+
+    // 🔤 Basit HTML çıktı (CSS yok)
+    const html = `
+      <!DOCTYPE html>
+      <html lang="tr">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Haftalık Menü</title>
+      </head>
+      <body>
+        <h2>Haftalık Menü (${today.toLocaleDateString("tr-TR")})<
