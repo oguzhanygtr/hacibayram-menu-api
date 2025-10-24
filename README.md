@@ -1,4 +1,4 @@
-# 🍽️ Günlük Yemek Menüsü (HBVÜ XML/HTML API)
+# 🍽️ Günlük Yemek Menüsü (AHBVÜ XML/HTML API)
 
 Bu proje, **Ankara Hacı Bayram Veli Üniversitesi** yemek listesini otomatik olarak XML ve HTML formatlarında sunar.  
 Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her gün güncel biçimde yayınlayan bir servis oluşturmaktır.
@@ -14,6 +14,7 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 - ☁️ **Vercel** üzerinde barındırılabilir, Node.js ile çalışır.
 
 ---
+
 ## 📁 Klasör Yapısı
 ├── api/
 │ ├── menu.js # XML çıktısı veren API endpoint
@@ -22,7 +23,9 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 │ └── menu.json # Günlük menülerin JSON formatında verisi
 ├── vercel.json # Yönlendirmeler ve build ayarları
 └── README.md
+
 ---
+
 | 🗓️ Günlük Geliştirme Süreci |
 | Tarih | Geliştirme Notu |
 |-------|-----------------|
@@ -32,8 +35,9 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 |  **20 Ekim 2025** |	Render deploy tamamlandı, gerçek menü verisi çekildi. chrome-aws-lambda uyumu sağlandı. |
 |  **21 Ekim 2025** |	Günlük menülerin güncellenmesi test edildi. Menü çekme hızı optimize edildi.
 |  **22 Ekim 2025** |	README eklendi, proje yapısı temizlendi. |
-|  **23 Ekim 2025** | Yayında otomatik XML çıktısı sağlandı, menüde eksik veri durumları için fallback metin eklendi. Proje Vercel deploy taşındı. |
-|  **24 Ekim 2025**	| Puppeteer sürüm hataları giderildi, stabil sürüm deploy edildi. |
+|  **23 Ekim 2025** | Yayında otomatik XML çıktısı sağlandı, menüde eksik veri durumları için fallback metin eklendi. Proje Vercel'e taşındı. |
+|  **24 Ekim 2025**	| Puppeteer sürüm hataları giderildi, cheerio stabil sürüm deploy edildi. |
+
 ---
 
 ## 🛠️ Teknolojiler
