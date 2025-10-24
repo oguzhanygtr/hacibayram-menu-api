@@ -26,7 +26,8 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 
 ---
 
-| 🗓️ Günlük Geliştirme Süreci |
+## 🗓️ Günlük Geliştirme Süreci 
+
 | Tarih | Geliştirme Notu |
 |-------|-----------------|
 |  **17 Ekim 2025**	| Proje oluşturuldu. Express.js tabanlı temel API yapısı kuruldu. |
