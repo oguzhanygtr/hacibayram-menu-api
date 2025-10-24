@@ -10,18 +10,22 @@ export default function handler(req, res) {
 
     // XML oluştur
     const xml = `<menu>
-  ${menuData.map(gun => `
+${menuData
+  .map(
+    (gun) => `
   <gun tarih="${gun.menu_date}">
     <yemekler>
-      ${gun.food_list.map(y => `<yemek>${y}</yemek>`).join("\n      ")}
+${gun.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")}
     </yemekler>
-  </gun>`).join("")}
+  </gun>`
+  )
+  .join("\n")}
 </menu>`;
 
-    res.setHeader("Content-Type", "application/xml");
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
     res.status(200).send(xml);
   } catch (err) {
-    console.error(err);
+    console.error("XML oluşturulamadı:", err);
     res.status(500).send(`<menu>
   <gun/>
   <yemekler></yemekler>
