@@ -14,7 +14,6 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 - ☁️ **Vercel** üzerinde barındırılabilir, Node.js ile çalışır.
 
 ---
-
 ## 📁 Klasör Yapısı
 ├── api/
 │ ├── menu.js # XML çıktısı veren API endpoint
@@ -23,8 +22,6 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 │ └── menu.json # Günlük menülerin JSON formatında verisi
 ├── vercel.json # Yönlendirmeler ve build ayarları
 └── README.md
-
-
 ---
 | 🗓️ Günlük Geliştirme Süreci |
 | Tarih | Geliştirme Notu |
