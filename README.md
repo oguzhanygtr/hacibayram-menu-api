@@ -16,7 +16,7 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 ---
 
 ## 📁 Klasör Yapısı
-
+```
 ├── api/
 │ ├── menu.js # XML çıktısı veren API endpoint
 │ └── menu-html.js # CSS tasarımlı HTML çıktısı
@@ -24,7 +24,7 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 │ └── menu.json # Günlük menülerin JSON formatında verisi
 ├── vercel.json # Yönlendirmeler ve build ayarları
 └── README.md
-
+```
 ---
 
 ## 🗓️ Günlük Geliştirme Süreci 
