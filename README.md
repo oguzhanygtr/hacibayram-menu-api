@@ -26,14 +26,14 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 | 🗓️ Günlük Geliştirme Süreci |
 | Tarih | Geliştirme Notu |
 |-------|-----------------|
-|  **17 Ekim 2025 **	| Proje oluşturuldu. Express.js tabanlı temel API yapısı kuruldu. |
-|  **18 Ekim 2025 ** |	Puppeteer entegrasyonu yapıldı. Menü verileri HTML üzerinden test edildi. |
-|  **19 Ekim 2025 ** |	XML formatı eklendi, hata yakalama ve düzenli çıktı sağlandı. |
-|  **20 Ekim 2025 ** |	Render deploy tamamlandı, gerçek menü verisi çekildi. chrome-aws-lambda uyumu sağlandı. |
-|  **21 Ekim 2025 ** |	Günlük menülerin güncellenmesi test edildi. Menü çekme hızı optimize edildi.
-|  **22 Ekim 2025 ** |	README eklendi, proje yapısı temizlendi. |
-|  **23 Ekim 2025 ** | Yayında otomatik XML çıktısı sağlandı, menüde eksik veri durumları için fallback metin eklendi. Proje Vercel deploy taşındı. |
-|  **24 Ekim 2025 **	| Puppeteer sürüm hataları giderildi, stabil sürüm deploy edildi. |
+|  **17 Ekim 2025**	| Proje oluşturuldu. Express.js tabanlı temel API yapısı kuruldu. |
+|  **18 Ekim 2025** |	Puppeteer entegrasyonu yapıldı. Menü verileri HTML üzerinden test edildi. |
+|  **19 Ekim 2025** |	XML formatı eklendi, hata yakalama ve düzenli çıktı sağlandı. |
+|  **20 Ekim 2025** |	Render deploy tamamlandı, gerçek menü verisi çekildi. chrome-aws-lambda uyumu sağlandı. |
+|  **21 Ekim 2025** |	Günlük menülerin güncellenmesi test edildi. Menü çekme hızı optimize edildi.
+|  **22 Ekim 2025** |	README eklendi, proje yapısı temizlendi. |
+|  **23 Ekim 2025** | Yayında otomatik XML çıktısı sağlandı, menüde eksik veri durumları için fallback metin eklendi. Proje Vercel deploy taşındı. |
+|  **24 Ekim 2025**	| Puppeteer sürüm hataları giderildi, stabil sürüm deploy edildi. |
 ---
 
 ## 🛠️ Teknolojiler
