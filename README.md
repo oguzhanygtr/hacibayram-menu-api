@@ -31,6 +31,11 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 
 | Tarih | Geliştirme Notu |
 |-------|-----------------|
+|  **12 Ekim 2025**	| Proje fikri oluşturuldu: “yemek.hacibayram.edu.tr” sitesinden menüyü çekip XML’e dönüştürme. |
+|  **13 Ekim 2025**	| Sunucu tarafında puppeteer çalışmaması nedeniyle alternatif yöntem arandı. |
+|  **14 Ekim 2025**	| Menü elementlerinin JavaScript ile sonradan yüklendiği fark edildi. |
+|  **15 Ekim 2025**	| “Serverless + statik JSON fallback” fikri geliştirildi. |
+|  **16 Ekim 2025**	| İlk statik `menu.json` dosyası oluşturuldu. Menü JSON’dan XML çıktısı üretildi.
 |  **17 Ekim 2025**	| Proje oluşturuldu. Express.js tabanlı temel API yapısı kuruldu. |
 |  **18 Ekim 2025** |	Puppeteer entegrasyonu yapıldı. Menü verileri HTML üzerinden test edildi. |
 |  **19 Ekim 2025** |	XML formatı eklendi, hata yakalama ve düzenli çıktı sağlandı. |
