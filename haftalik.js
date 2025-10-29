@@ -13,7 +13,7 @@ export default async function handler(req, res) {
       const response = await fetch(remoteUrl, { agent });
       data = await response.json();
     } catch {
-      const local = fs.readFileSync("./public/menu.json", "utf8");
+      const local = fs.readFileSync("./data/menu.json", "utf8");
       data = JSON.parse(local);
     }
 
