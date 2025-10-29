@@ -1,29 +1,68 @@
 import fetch from "node-fetch";
-import fs from "fs";
 import https from "https";
 
 export default async function handler(req, res) {
   try {
     const agent = new https.Agent({ rejectUnauthorized: false });
-    const remoteUrl = "https://yemek.hacibayram.edu.tr/load-menu";
-    let data;
+    const url = "https://yemek.hacibayram.edu.tr/load-menu";
 
-    // Uzaktan veri çek, hata olursa yerel menu.json'dan oku
-    try {
-      const response = await fetch(remoteUrl, { agent });
-      data = await response.json();
-    } catch {
-      const local = fs.readFileSync("./data/menu.json", "utf8");
-      data = JSON.parse(local);
+    const response = await fetch(url, { agent });
+    const data = await response.json().catch(() => null);
+
+    if (!Array.isArray(data)) {
+      throw new Error("Geçersiz veya boş JSON verisi alındı.");
     }
 
-    if (!Array.isArray(data)) throw new Error("Veri geçersiz.");
-
-    // Haftalık filtre (bugünden +7 güne kadar)
+    // Bugünün tarihi ve haftalık aralık
     const today = new Date();
-    const next7 = new Date(today);
-    next7.setDate(today.getDate() + 7);
+    today.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(today);
+    endOfWeek.setDate(today.getDate() + 6);
 
-    const haftalikMenu = data.filter((m) => {
-      const d = new Date(m.menu_date);
-      return d >= today && d <= n
+    // Haftalık menüleri filtrele
+    const weeklyMenus = data.filter((item) => {
+      const date = new Date(item.menu_date);
+      return date >= today && date <= endOfWeek;
+    });
+
+    // XML çıktısı hazırla
+    let xml;
+    if (weeklyMenus.length > 0) {
+      const menuList = weeklyMenus
+        .map((m) => {
+          const yemekler = Array.isArray(m.food_list)
+            ? m.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")
+            : "      <yemek>Menü bulunamadı.</yemek>";
+
+          return `  <gun tarih="${m.menu_date}">
+    <yemekler>
+${yemekler}
+    </yemekler>
+  </gun>`;
+        })
+        .join("\n");
+
+      xml = `<menu>
+${menuList}
+</menu>`;
+    } else {
+      xml = `<menu>
+  <gun/>
+  <yemekler>
+    <yemek>Bu haftaya ait menü bulunamadı.</yemek>
+  </yemekler>
+</menu>`;
+    }
+
+    // Yanıt
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.status(200).send(xml);
+  } catch (err) {
+    console.error("❌ Haftalık menü hatası:", err);
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.status(500).send(`<menu>
+  <gun/>
+  <yemekler></yemekler>
+</menu>`);
+  }
+}
