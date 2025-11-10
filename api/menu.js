@@ -6,16 +6,16 @@ export default async function handler(req, res) {
     const agent = new https.Agent({ rejectUnauthorized: false });
     const url = "https://yemek.hacibayram.edu.tr/load-menu";
 
-    // Cache veya eski response'ları engelle
+    // Cache'i engelle
     const response = await fetch(url + `?t=${Date.now()}`, { agent, cache: "no-store" });
 
-    // Text olarak al, sonra JSON parse et (bazı durumlarda response JSON header'sız geliyor)
     const raw = await response.text();
     let data;
     try {
       data = JSON.parse(raw);
     } catch {
-      console.error("Uyarı: JSON parse edilemedi, ham veri döndürüldü.");
+      console.error("JSON parse hatası, ham veri:");
+      console.error(raw.slice(0, 500));
       data = [];
     }
 
@@ -23,46 +23,23 @@ export default async function handler(req, res) {
       throw new Error("Veri boş veya geçersiz formatta döndü.");
     }
 
-    // Günün tarihini belirle
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
-    const todayStr = `${yyyy}-${mm}-${dd}`;
+    // Tüm günleri XML formatında sırala
+    const xmlItems = data
+      .map((menu) => {
+        const yemekler =
+          Array.isArray(menu.food_list) && menu.food_list.length > 0
+            ? menu.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")
+            : "      <yemek>Veri bulunamadı</yemek>";
 
-    // Veriden bugünün menüsünü bul
-    const todayMenu = data.find((m) => m.menu_date === todayStr);
+        return `  <gun tarih="${menu.menu_date}">
+    <yemekler>
+${yemekler}
+    </yemekler>
+  </gun>`;
+      })
+      .join("\n");
 
-    // XML formatı oluştur
-    let xml;
-    if (todayMenu && Array.isArray(todayMenu.food_list)) {
-      xml = `<menu>
-  <gun tarih="${todayMenu.menu_date}">
-    <yemekler>
-${todayMenu.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")}
-    </yemekler>
-  </gun>
-</menu>`;
-    } else {
-      // Eğer Kasım’da veri var ama bugüne ait yoksa en yakın gelecekteki günü göster
-      const futureMenu = data.find((m) => new Date(m.menu_date) > today);
-      if (futureMenu) {
-        xml = `<menu>
-  <gun tarih="${futureMenu.menu_date}">
-    <yemekler>
-${futureMenu.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")}
-    </yemekler>
-  </gun>
-</menu>`;
-      } else {
-        xml = `<menu>
-  <gun tarih="${todayStr}"/>
-  <yemekler>
-    <yemek>Bugün veya gelecek tarihler için menü bulunamadı.</yemek>
-  </yemekler>
-</menu>`;
-      }
-    }
+    const xml = `<menu>\n${xmlItems}\n</menu>`;
 
     res.setHeader("Content-Type", "application/xml; charset=utf-8");
     res.status(200).send(xml);
@@ -72,7 +49,7 @@ ${futureMenu.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")}
     res.status(500).send(`<menu>
   <gun/>
   <yemekler>
-    <yemek>Sunucu hatası veya veri kaynağı geçici olarak kullanılamıyor.</yemek>
+    <yemek>Sunucu hatası veya veri kaynağına erişilemedi.</yemek>
   </yemekler>
 </menu>`);
   }
