@@ -1,113 +1,79 @@
-// api/haftalik.js
-import fs from "fs";
-import path from "path";
-
-function escapeXml(s) {
-  if (s === undefined || s === null) return "";
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}
+import fetch from "node-fetch";
+import https from "https";
 
 export default async function handler(req, res) {
-  const remoteUrl = "https://yemek.hacibayram.edu.tr/load-menu";
-  let data = null;
-
   try {
-    // 1) Uzak JSON çekmeyi dene
+    const agent = new https.Agent({ rejectUnauthorized: false });
+    const url = "https://yemek.hacibayram.edu.tr/load-menu";
+
+    // Cache veya eski response'ları engelle
+    const response = await fetch(url + `?t=${Date.now()}`, { agent, cache: "no-store" });
+
+    // Text olarak al, sonra JSON parse et (bazı durumlarda response JSON header'sız geliyor)
+    const raw = await response.text();
+    let data;
     try {
-      const resp = await fetch(remoteUrl);
-      if (resp.ok) {
-        const text = await resp.text();
-        try {
-          const parsed = JSON.parse(text);
-          if (Array.isArray(parsed) && parsed.length) {
-            data = parsed;
-            console.log("Uzak JSON yüklendi:", data.length);
-          } else if (parsed && typeof parsed === "object") {
-            // { data: [...] } ya da { menus: [...] } gibi durumlar
-            const maybe =
-              parsed.data ||
-              parsed.menus ||
-              parsed.menu ||
-              parsed.items ||
-              null;
-            if (Array.isArray(maybe) && maybe.length) {
-              data = maybe;
-              console.log("Uzak JSON alt dizi bulundu:", data.length);
-            }
-          }
-        } catch (err) {
-          console.warn("Uzak JSON parse hatası:", err.message);
-        }
-      } else {
-        console.warn("Uzak bağlantı başarısız:", resp.status);
-      }
-    } catch (fetchErr) {
-      console.warn("Fetch hatası:", fetchErr.message);
+      data = JSON.parse(raw);
+    } catch {
+      console.error("Uyarı: JSON parse edilemedi, ham veri döndürüldü.");
+      data = [];
     }
 
-    // 2) Uzak başarısızsa yerel `data/menu.json` oku
-    if (!Array.isArray(data)) {
-      const filePath = path.join(process.cwd(), "data", "menu.json");
-      try {
-        const raw = fs.readFileSync(filePath, "utf8");
-        const localData = JSON.parse(raw);
-        if (Array.isArray(localData)) {
-          data = localData;
-          console.log("Yerel menu.json yüklendi:", data.length);
-        } else {
-          data = [];
-          console.warn("Yerel menu.json dizi formatında değil.");
-        }
-      } catch (err) {
-        console.error("Yerel menu.json okunamadı:", err.message);
-        data = [];
-      }
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error("Veri boş veya geçersiz formatta döndü.");
     }
 
-    // 3) XML oluştur
+    // Günün tarihini belirle
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    // Veriden bugünün menüsünü bul
+    const todayMenu = data.find((m) => m.menu_date === todayStr);
+
+    // XML formatı oluştur
     let xml;
-    if (data.length) {
-      const parts = data
-        .map((m) => {
-          const tarih = escapeXml(m.menu_date || m.date || "");
-          const yemekler = Array.isArray(m.food_list)
-            ? m.food_list
-            : Array.isArray(m.yemekler)
-            ? m.yemekler
-            : [];
-          const yemekXml = yemekler
-            .map((y) => `      <yemek>${escapeXml(y)}</yemek>`)
-            .join("\n");
-          return `  <gun tarih="${tarih}">
-    <yemekler>
-${yemekXml || "      <yemek>Menü boş</yemek>"}
-    </yemekler>
-  </gun>`;
-        })
-        .join("\n");
-      xml = `<menu>\n${parts}\n</menu>`;
-    } else {
+    if (todayMenu && Array.isArray(todayMenu.food_list)) {
       xml = `<menu>
-  <gun/>
+  <gun tarih="${todayMenu.menu_date}">
+    <yemekler>
+${todayMenu.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")}
+    </yemekler>
+  </gun>
+</menu>`;
+    } else {
+      // Eğer Kasım’da veri var ama bugüne ait yoksa en yakın gelecekteki günü göster
+      const futureMenu = data.find((m) => new Date(m.menu_date) > today);
+      if (futureMenu) {
+        xml = `<menu>
+  <gun tarih="${futureMenu.menu_date}">
+    <yemekler>
+${futureMenu.food_list.map((y) => `      <yemek>${y}</yemek>`).join("\n")}
+    </yemekler>
+  </gun>
+</menu>`;
+      } else {
+        xml = `<menu>
+  <gun tarih="${todayStr}"/>
   <yemekler>
-    <yemek>Menü verisi bulunamadı.</yemek>
+    <yemek>Bugün veya gelecek tarihler için menü bulunamadı.</yemek>
   </yemekler>
 </menu>`;
+      }
     }
 
     res.setHeader("Content-Type", "application/xml; charset=utf-8");
     res.status(200).send(xml);
   } catch (err) {
-    console.error("Genel hata:", err);
+    console.error("Hata:", err);
     res.setHeader("Content-Type", "application/xml; charset=utf-8");
     res.status(500).send(`<menu>
   <gun/>
-  <yemekler></yemekler>
+  <yemekler>
+    <yemek>Sunucu hatası veya veri kaynağı geçici olarak kullanılamıyor.</yemek>
+  </yemekler>
 </menu>`);
   }
 }
