@@ -44,7 +44,7 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 |  **22 Ekim 2025** |	README eklendi, proje yapısı temizlendi. |
 |  **23 Ekim 2025** | Yayında otomatik XML çıktısı sağlandı, menüde eksik veri durumları için fallback metin eklendi. Proje Vercel'e taşındı. |
 |  **24 Ekim 2025**	| Puppeteer sürüm hataları giderildi, cheerio stabil sürüm deploy edildi. |
-
+|  **9 Kasım 2025**	| Kaynak veri sebepli hata giderildi, yeni stabil sürüm deploy edildi. |
 ---
 
 ## 🛠️ Teknolojiler
@@ -66,7 +66,7 @@ Amaç; üniversite sitesindeki menüleri manuel olarak kopyalamak yerine, her g�
 ---
 
 ## 👨‍💻 Geliştirici
-**Oğuzhan Yiğiter**  
+**Oğuz Yiğiter**  
 Proje geliştirme, API entegrasyonu ve otomasyon üzerine çalışıyor.
 
 ---
